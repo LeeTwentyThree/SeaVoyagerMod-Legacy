@@ -17,7 +17,7 @@ namespace ShipMod.Ship
         ShipExitDoor exitHatch;
         ShipSlidingDoor slidingDoor1;
         ShipSlidingDoor slidingDoor2;
-        ExosuitDock dock;
+        SuspendedDock dock;
 
         public ShipSolarPanel solarPanel;
         public ShipHUD hud;
@@ -84,7 +84,7 @@ namespace ShipMod.Ship
             slidingDoor1 = Helpers.FindChild(gameObject, "KeyPadDoor1").AddComponent<ShipSlidingDoor>();
             slidingDoor2 = Helpers.FindChild(gameObject, "KeyPadDoor2").AddComponent<ShipSlidingDoor>();
 
-            dock = gameObject.SearchChild("ExosuitDock").AddComponent<ExosuitDock>();
+            dock = gameObject.SearchChild("ExosuitDock").AddComponent<SuspendedDock>();
             dock.ship = this;
             dock.Initialize();
 

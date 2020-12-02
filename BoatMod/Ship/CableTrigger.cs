@@ -9,7 +9,7 @@ namespace ShipMod.Ship
 {
     public class CableTrigger : MonoBehaviour 
     {
-        public ExosuitDock dock;
+        public SuspendedDock dock;
 
         void OnTriggerEnter(Collider collider)
         {

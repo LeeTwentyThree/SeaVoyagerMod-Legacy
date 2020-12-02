@@ -9,7 +9,7 @@ namespace ShipMod.Ship
 {
     public class HeldByCable : MonoBehaviour
     {
-        public ExosuitDock dock;
+        public SuspendedDock dock;
         public bool Docked
         {
             get
