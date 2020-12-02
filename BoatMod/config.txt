@@ -1,0 +1,6 @@
+{
+	"MaxPower": 1250,
+	"PowerProductionScale": 1.0,
+	"PowerDepletionRate": 1.0,
+	"AudioVolume": 1.0
+}
