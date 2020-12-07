@@ -10,7 +10,7 @@ namespace ShipMod.Ship
 {
     public class SuspendedDock : MonoBehaviour
     {
-        public ShipBehaviour ship;
+        public SeaVoyager ship;
         LineRenderer cableRenderer;
         Transform cableConnectionPoint;
         Transform armTransform;
@@ -110,6 +110,17 @@ namespace ShipMod.Ship
             {
                 var playerVehicle = Player.main.GetVehicle();
                 return playerVehicle != null && playerVehicle == dockedVehicle;
+            }
+        }
+        /// <summary>
+        /// Whether the current vehicle is a seamoth or not.
+        /// </summary>
+        public bool SeamothCurrentlyDocked
+        {
+            get
+            {
+                if (dockedVehicle == null) return false;
+                return dockedVehicle is SeaMoth;
             }
         }
 
@@ -218,7 +229,7 @@ namespace ShipMod.Ship
             cableTrigger.transform.position = CableEndWorldPosition;
             if (dockedVehicle)
             {
-                dockedVehicle.transform.position = cableTrigger.transform.position + (Vector3.down * 2f);
+                dockedVehicle.transform.position = cableTrigger.transform.position + (Vector3.down * (SeamothCurrentlyDocked? 1f : 2f));
                 if (dockedVehicle is Exosuit)
                 {
                     dockedVehicle.useRigidbody.isKinematic = true;

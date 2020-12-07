@@ -27,10 +27,11 @@ namespace ShipMod.Ship
             {
                 Ingredients = new List<Ingredient>()
                 {
-                    new Ingredient(TechType.TitaniumIngot, 1),
+                    new Ingredient(TechType.TitaniumIngot, 3),
                     new Ingredient(TechType.Lubricant, 1),
                     new Ingredient(TechType.Floater, 2),
-                    new Ingredient(TechType.WiringKit, 1)
+                    new Ingredient(TechType.WiringKit, 1),
+                    new Ingredient(TechType.Glass, 1)
                 },
                 craftAmount = 1
             };
@@ -70,6 +71,7 @@ namespace ShipMod.Ship
                 worldForces.useRigidbody = rigidbody;
                 worldForces.underwaterGravity = -20f; //Despite it being negative, which would apply downward force, this actually makes it go UP on the y axis.
                 worldForces.aboveWaterGravity = 20f; //Counteract the strong upward force
+                worldForces.waterDepth = -5f;
 
                 //Determines the places the little build bots point their laser beams at.
                 var buildBots = prefab.AddComponent<BuildBotBeamPoints>();
@@ -187,7 +189,7 @@ namespace ShipMod.Ship
                 energyMixin.maxEnergy = 1200f;
 
                 //Add this component. It inherits from the same component that both the cyclops submarine and seabases use.
-                var shipBehaviour = prefab.AddComponent<ShipBehaviour>();
+                var shipBehaviour = prefab.AddComponent<SeaVoyager>();
 
                 //It needs to produce power somehow
                 shipBehaviour.solarPanel = Helpers.FindChild(prefab, "SolarPanel").AddComponent<ShipSolarPanel>();
@@ -244,22 +246,21 @@ namespace ShipMod.Ship
 
         Material GetGlassMaterial()
         {
-            var aquarium = GameObject.Instantiate(CraftData.GetPrefabForTechType(TechType.Aquarium));
+            var reference = GameObject.Instantiate(CraftData.GetPrefabForTechType(TechType.Aquarium));
 
-            Renderer[] renderers = aquarium.GetComponentsInChildren<Renderer>(true);
+            Renderer[] renderers = reference.GetComponentsInChildren<Renderer>(true);
 
             foreach (Renderer renderer in renderers)
             {
                 foreach (Material material in renderer.materials)
                 {
-                    if (material.name.StartsWith("Aquarium_glass", StringComparison.OrdinalIgnoreCase))
+                    if (material.name.ToLower().Contains("glass"))
                     {
-                        Resources.UnloadAsset(aquarium);
                         return material;
                     }
                 }
             }
-            Resources.UnloadAsset(aquarium);
+            Resources.UnloadAsset(reference);
             return null;
         }
 
@@ -300,11 +301,6 @@ namespace ShipMod.Ship
                     {
                         mat.EnableKeyword("MARMO_ALPHA_CLIP");
                     }
-                    if (mat.name.StartsWith("Glass"))
-                    {
-                        renderer.materials[i] = GetGlassMaterial();
-                        continue;
-                    }
                     Texture emissionTexture = mat.GetTexture("_EmissionMap");
                     if (emissionTexture || mat.name.Contains("illum"))
                     {
@@ -314,6 +310,7 @@ namespace ShipMod.Ship
                     }
                 }
             }
+            prefab.SearchChild("Window").GetComponent<MeshRenderer>().material = GetGlassMaterial();
         }
 
         protected override Atlas.Sprite GetItemSprite()

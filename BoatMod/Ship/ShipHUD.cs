@@ -18,7 +18,7 @@ namespace ShipMod.Ship
         Image stopImg;
         Image camImg;
         Image mapImg;
-        ShipBehaviour ship;
+        SeaVoyager ship;
         Sprite directionSpriteInactive;
         Sprite directionSpriteActive;
         Sprite switchedOn;
@@ -42,7 +42,7 @@ namespace ShipMod.Ship
 
         void Awake()
         {
-            ship = GetComponentInParent<ShipBehaviour>();
+            ship = GetComponentInParent<SeaVoyager>();
             fwdImg = Helpers.FindChild(gameObject, "ForwardButton").GetComponent<Image>();
             reverseImg = Helpers.FindChild(gameObject, "ReverseButton").GetComponent<Image>();
             leftImg = Helpers.FindChild(gameObject, "LeftButton").GetComponent<Image>();
@@ -94,61 +94,127 @@ namespace ShipMod.Ship
         {
             buttonSource.PlayOneShot(buttonPressSound);
         }
-        public void DisableDirectionButtons()
+        public void SetButtonImages()
         {
             fwdImg.sprite = directionSpriteInactive;
             reverseImg.sprite = directionSpriteInactive;
             leftImg.sprite = directionSpriteInactive;
             rightImg.sprite = directionSpriteInactive;
             stopImg.sprite = switchedOff;
-            PlayClickSound();
+            if(ship.currentState == ShipState.Idle)
+            {
+                stopImg.sprite = switchedOn;
+            }
+            if(ship.currentState == ShipState.Moving || ship.currentState == ShipState.MovingAndRotating)
+            {
+                if(ship.moveDirection == ShipMoveDirection.Forward) fwdImg.sprite = directionSpriteActive;
+                else if(ship.moveDirection == ShipMoveDirection.Reverse) reverseImg.sprite = directionSpriteActive;
+            }
+            if(ship.currentState == ShipState.Rotating || ship.currentState == ShipState.MovingAndRotating)
+            {
+                if (ship.rotateDirection == ShipRotateDirection.Left) leftImg.sprite = directionSpriteActive;
+                else if (ship.rotateDirection == ShipRotateDirection.Right) rightImg.sprite = directionSpriteActive;
+            }
         }
         void OnForward()
         {
-            ship.currentState = ShipState.Manual;
-            DisableDirectionButtons();
-            fwdImg.sprite = directionSpriteActive;
-            ship.moveAmount = 20f;
+            if (ship.moveDirection == ShipMoveDirection.Forward)
+            {
+                ship.moveDirection = ShipMoveDirection.Idle;
+                if (ship.currentState == ShipState.MovingAndRotating) ship.currentState = ShipState.Rotating;
+                else if (ship.currentState == ShipState.Moving) ship.currentState = ShipState.Idle;
+            }
+            else if (ship.currentState == ShipState.Rotating || ship.currentState == ShipState.MovingAndRotating)
+            {
+                ship.currentState = ShipState.MovingAndRotating;
+                ship.moveDirection = ShipMoveDirection.Forward;
+            }
+            else
+            {
+                ship.currentState = ShipState.Moving;
+                ship.moveDirection = ShipMoveDirection.Forward;
+            }
             PlayClickSound();
+            SetButtonImages();
         }
         void OnReverse()
         {
-            ship.currentState = ShipState.Manual;
-            DisableDirectionButtons();
-            reverseImg.sprite = directionSpriteActive;
-            ship.moveAmount = -20f;
+            if (ship.moveDirection == ShipMoveDirection.Reverse)
+            {
+                ship.moveDirection = ShipMoveDirection.Idle;
+                if (ship.currentState == ShipState.MovingAndRotating) ship.currentState = ShipState.Rotating;
+                else if (ship.currentState == ShipState.Moving) ship.currentState = ShipState.Idle;
+            }
+            else if (ship.currentState == ShipState.Rotating || ship.currentState == ShipState.MovingAndRotating)
+            {
+                ship.currentState = ShipState.MovingAndRotating;
+                ship.moveDirection = ShipMoveDirection.Reverse;
+            }
+            else
+            {
+                ship.currentState = ShipState.Moving;
+                ship.moveDirection = ShipMoveDirection.Reverse;
+            }
             PlayClickSound();
+            SetButtonImages();
         }
         void OnLeft()
         {
+            if (ship.rotateDirection == ShipRotateDirection.Left)
+            {
+                ship.rotateDirection = ShipRotateDirection.Idle;
+                if (ship.currentState == ShipState.MovingAndRotating) ship.currentState = ShipState.Moving;
+                else if (ship.currentState == ShipState.Rotating) ship.currentState = ShipState.Idle;
+            }
+            else if (ship.currentState == ShipState.Moving || ship.currentState == ShipState.MovingAndRotating)
+            {
+                ship.currentState = ShipState.MovingAndRotating;
+                ship.rotateDirection = ShipRotateDirection.Left;
+            }
+            else
+            {
+                ship.currentState = ShipState.Rotating;
+                ship.rotateDirection = ShipRotateDirection.Left;
+            }
             OnRotationChanged();
-            ship.currentState = ShipState.Rotating;
-            DisableDirectionButtons();
-            leftImg.sprite = directionSpriteActive;
-            ship.rotationAmount = -20f;
             PlayClickSound();
+            SetButtonImages();
         }
         void OnRight()
         {
+            if (ship.rotateDirection == ShipRotateDirection.Right)
+            {
+                ship.rotateDirection = ShipRotateDirection.Idle;
+                if (ship.currentState == ShipState.MovingAndRotating) ship.currentState = ShipState.Moving;
+                else if (ship.currentState == ShipState.Rotating) ship.currentState = ShipState.Idle;
+            }
+            else if (ship.currentState == ShipState.Moving || ship.currentState == ShipState.MovingAndRotating)
+            {
+                ship.currentState = ShipState.MovingAndRotating;
+                ship.rotateDirection = ShipRotateDirection.Right;
+            }
+            else
+            {
+                ship.currentState = ShipState.Rotating;
+                ship.rotateDirection = ShipRotateDirection.Right;
+            }
             OnRotationChanged();
-            ship.currentState = ShipState.Rotating;
-            DisableDirectionButtons();
-            rightImg.sprite = directionSpriteActive;
-            ship.rotationAmount = 20f;
             PlayClickSound();
+            SetButtonImages();
         }
         void OnRotationChanged()
         {
-            if (ship.currentState == ShipState.Rotating)
+            if (ship.currentState == ShipState.Rotating || ship.currentState == ShipState.MovingAndRotating)
             {
                 ship.rb.AddTorque(Vector3.up * -ship.rb.angularVelocity.y * 50f * ship.rb.mass);
             }
         }
-        void OnStop()
+        public void OnStop()
         {
-            DisableDirectionButtons();
-            stopImg.sprite = switchedOn;
             ship.currentState = ShipState.Idle;
+            ship.moveDirection = ShipMoveDirection.Idle;
+            ship.rotateDirection = ShipRotateDirection.Idle;
+            SetButtonImages();
             PlayClickSound();
         }
         void SetTabCam()

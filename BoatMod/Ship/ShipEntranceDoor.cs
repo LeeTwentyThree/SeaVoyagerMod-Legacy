@@ -10,12 +10,12 @@ namespace ShipMod.Ship
 {
     public class ShipEntranceDoor : HandTarget, IHandTarget
     {
-        ShipBehaviour sub;
+        SeaVoyager sub;
         Transform entrancePosition;
         
         void Start()
         {
-            sub = GetComponentInParent<ShipBehaviour>();
+            sub = GetComponentInParent<SeaVoyager>();
             entrancePosition = transform.GetChild(0);
         }
         public void OnHandClick(GUIHand hand)

@@ -9,7 +9,7 @@ namespace ShipMod.Ship
 {
     public class ShipPropeller : MonoBehaviour
     {
-        public ShipBehaviour ship;
+        public SeaVoyager ship;
         float angularVelocity = 0f;
         readonly float maxAngularVelocity = 15120f;
         readonly float angularVelocityLossRate = 1512f;

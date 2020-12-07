@@ -27,7 +27,7 @@ namespace ShipMod
         public static FMODAsset welcomeSoundAsset;
         public static FMODAsset noPowerSoundAsset;
         public static FMODAsset powerDownSoundAsset;
-        public static Config config;
+        public static Config config = OptionsPanelHandler.Main.RegisterModOptions<Config>();
 
         public static string ModFolderPath
         {
@@ -50,34 +50,12 @@ namespace ShipMod
                 return Path.Combine(AssetsPath, "shipassets");
             }
         }
-        public static string ConfigDirectory
-        {
-            get
-            {
-                return Path.Combine(ModFolderPath, "config.txt");
-            }
-        }
-
 
         [QModPatch]
         public static void Patch()
         {
             string executingLocation = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string folderPath = Path.Combine(executingLocation, "Assets");
-
-            if (File.Exists(ConfigDirectory))
-            {
-                using(StreamReader sr = new StreamReader(ConfigDirectory))
-                {
-                    config = JsonUtility.FromJson<Config>(sr.ReadToEnd());
-                }
-            }
-            else
-            {
-                Debug.LogError("Failed to load config file. Using default values.");
-                config.MaxPower = 1500;
-                config.PowerProductionScale = 1f;
-            }
 
             bundle = AssetBundle.LoadFromFile(AssetBundlePath);
 
@@ -118,6 +96,10 @@ namespace ShipMod
             var spawnNearbyPostfix = new HarmonyMethod(AccessTools.Method(typeof(SpawnNearby_Patch), "Postfix"));
             harmony.Patch(spawnNearbyOriginal, null, spawnNearbyPostfix);
 
+            var updateMoveOriginal = AccessTools.Method(typeof(GroundMotor), "Awake");
+            var updateMovePrefix = new HarmonyMethod(AccessTools.Method(typeof(GroundMotor_Awake_Patch), "Postfix"));
+            harmony.Patch(updateMoveOriginal, null, updateMovePrefix);
+
             LanguageHandler.SetLanguageLine("Ency_SeaVoyager", "Alterra Sea Voyager Piloting Manual");
             LanguageHandler.SetLanguageLine("EncyDesc_SeaVoyager", "A shallow-water alternative to the Cyclops submarine that provides extensive mobility and a large building space.\n\nPiloting this vehicle is simple. Simply choose a direction and it will keep going in that direction. Pressing the off button will immediately decelerate the vessel. In an emergency, the vehicle will automatically shut down. You may also use the down-facing camera or map to aid in piloting.\n\nPlease keep in mind this vehicle was not approved by any safety departments. As always, save often.");
 
@@ -147,6 +129,14 @@ namespace ShipMod
                     duration = 20f; //Takes 20 seconds to build
                     FMODUWE.PlayOneShot("event:/tools/constructor/spawn", Player.main.transform.position, 1f); //Cyclops does this i think
                 }
+            }
+        }
+
+        public static class GroundMotor_Awake_Patch
+        {
+            public static void Postfix(GroundMotor __instance)
+            {
+                __instance.movingPlatform.movementTransfer = GroundMotor.MovementTransferOnJump.PermaLocked;
             }
         }
 

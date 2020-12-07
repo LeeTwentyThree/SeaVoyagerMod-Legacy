@@ -9,13 +9,13 @@ namespace ShipMod.Ship
 {
     public class ShipMove : MonoBehaviour
     {
-        public ShipBehaviour ship;
+        public SeaVoyager ship;
 
         void FixedUpdate()
         {
             if(ship.currentState == ShipState.Idle)
             {
-                //ship.rb.angularVelocity = Vector3.zero;
+                Decelerotate();
                 return;
             }
             if(GameModeUtils.IsInvisible() || ship.powerRelay.ConsumeEnergy(Time.fixedDeltaTime * 2f * QPatch.config.PowerDepletionRate, out float amountConsumed))
@@ -24,22 +24,32 @@ namespace ShipMod.Ship
                 {
                     default:
                         break;
-                    case ShipState.Manual:
-                        ship.rb.AddForce(-ship.transform.forward * ship.moveAmount * ship.rb.mass, ForceMode.Force);
-                        ship.rb.angularVelocity = Vector3.zero;
+                    case ShipState.Moving:
+                        ship.rb.AddForce(-ship.transform.forward * ship.MoveAmount * ship.rb.mass, ForceMode.Force);
+                        Decelerotate();
                         break;
                     case ShipState.Rotating:
-                        ship.rb.AddTorque(Vector3.up * ship.rotationAmount * ship.rb.mass, ForceMode.Force);
+                        ship.rb.AddTorque(Vector3.up * ship.RotateAmount * ship.rb.mass, ForceMode.Force);
+                        break;
+                    case ShipState.MovingAndRotating:
+                        ship.rb.AddForce(-ship.transform.forward * ship.MoveAmount * ship.rb.mass, ForceMode.Force);
+                        ship.rb.AddTorque(Vector3.up * ship.RotateAmount * ship.rb.mass, ForceMode.Force);
                         break;
                 }
             }
             else
             {
                 ship.currentState = ShipState.Idle;
-                ship.hud.DisableDirectionButtons();
+                ship.moveDirection = ShipMoveDirection.Idle;
+                ship.rotateDirection = ShipRotateDirection.Idle;
+                ship.hud.SetButtonImages();
                 ship.voiceNotificationManager.PlayVoiceNotification(ship.noPowerNotification);
             }
             ship.rb.angularVelocity = new Vector3(ship.rb.angularVelocity.x, Mathf.Clamp(ship.rb.angularVelocity.y, -1f, 1f), ship.rb.angularVelocity.z);
+        }
+        void Decelerotate()
+        {
+            ship.rb.AddTorque(-ship.rb.angularVelocity, ForceMode.Acceleration);
         }
         void OnEnable()
         {
@@ -53,11 +63,10 @@ namespace ShipMod.Ship
         }
         void OnDeath(Player player)
         {
-            ship.currentState = ShipState.Idle;
+            ship.hud.OnStop();
             ship.rb.velocity = Vector3.zero;
             ship.rb.angularVelocity = Vector3.zero;
             ship.rb.isKinematic = true;
-            ship.hud.DisableDirectionButtons();
         }
         void OnRespawn(Player player)
         {
