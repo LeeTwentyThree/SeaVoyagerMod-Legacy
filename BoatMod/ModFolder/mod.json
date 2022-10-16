@@ -1,8 +1,8 @@
 {
   "Id": "SeaVoyager",
   "DisplayName": "Alterra Sea Voyager Mod",
-  "Author": "Lee23",
-  "Version": "1.2.1",
+  "Author": "Lee23, ShirubaFoxy, mrpp777",
+  "Version": "2.0.1",
   "Requires": [ ],
   "Enable": true,
   "Game": "Subnautica",
